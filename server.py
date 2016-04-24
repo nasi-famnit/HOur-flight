@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import request
+from flask import request, redirect, url_for
 
 import json
 import arrow
@@ -56,6 +56,18 @@ def predict():
         
     else:
         return 'You can only POST to this endpoint'
+
+@app.route('/static/<path:path>')
+def send_static(path):
+    return send_from_directory('static/', path)
+
+#@app.route('/scripts/<path:path>')
+#def send_scripts(path):
+#    return send_from_directory('static/scripts/', path)
+
+@app.route('/')
+def main_page():
+    return redirect(url_for('static', filename='HtmlPage.html'))
 
 if __name__ == '__main__':
     #app.debug=True

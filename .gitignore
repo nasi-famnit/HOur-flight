@@ -60,3 +60,10 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+data/*
+weights.hdf5
+parse_weather.ipynb
+DataDownloader.pyproj
+flight-ready.sln
+.vs/*

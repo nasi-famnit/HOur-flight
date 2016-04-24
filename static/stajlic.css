@@ -16,6 +16,11 @@ h1, h2, h3 {
     font-family: 'Michroma', sans-serif;
 }
 
+.row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
 .row .col-md-6 {
     background: rgba(0, 0, 0, 0.4);
     color:white !important;
