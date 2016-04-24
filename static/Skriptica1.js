@@ -168,7 +168,7 @@ function flightSelected(flightID)
     
     var longitude = airportsDB[origin].lon;
     var latitude = airportsDB[origin].lat;
-    var requestURL = "http://192.168.0.165:5000/predict?origin="+origin+
+    var requestURL = "http://192.168.0.165/predict?origin="+origin+
         "&destination="+destination+"&distance="+distance+"&departureTime="+departureTime+
         "&longitude="+longitude+"&latitude="+latitude;
     //alert(origin + " " + destination + " " + departureTime + " " + distance + " " + longitude + " " + latitude);
