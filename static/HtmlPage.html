@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Ready for Take Off</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta charset="utf-8" />
+
+    <script src="Scripts/jquery-1.9.1.min.js"></script>
+    <script src="Scripts/bootstrap.js"></script>
+    <link href="Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="stajlic.css" rel="stylesheet" />
+    
+    <link href='https://fonts.googleapis.com/css?family=Michroma' rel='stylesheet' type='text/css'>
+
+
+    <script type="text/javascript" src="Scripts/moment.min.js"></script>
+    <script type="text/javascript" src="Scripts/bootstrap.min.js"></script>
+
+    <script src="Content/Selectize/js/standalone/selectize.js"></script>
+    <script src="Content/Selectize/js/standalone/selectize.min.js"></script>  
+    <link href="Content/Selectize/css/selectize.bootstrap3.css" rel="stylesheet" />
+
+</head>
+<body>
+    <div class="container">
+        <div class="jumbotron">
+            <h1>hOur Flight</h1><small>beta</small>
+        </div>
+
+        <div class="jumbotron">
+            <h2>Search by Flight Number</h2>
+            <div class="input-group">
+                <input id="flightID" type="text" class="form-control" placeholder="Enter flight number...">
+                <span class="input-group-btn">
+                    <button onclick="getFlightId()" class="btn btn-default" type="button">Go!</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h3>
+                    Departure
+                </h3>
+                <div class="sandbox">
+                    <select id="select-to" class="contacts" placeholder="Pick departure airport..."></select>
+                </div>
+                <div class="description">
+                    Select departure airpot using name, code or GPS
+                </div>
+                <div class="btn-block">
+                    <button onclick="getLocation()" id="depLoc" type="button" class="btn btn-default  form-control" aria-label="...">
+                        <span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="list-group">
+                    <button type="button" class="list-group-item depBtn"><p id="dep1">Nearest airports</p></button>
+                    <button type="button" class="list-group-item depBtn"><p id="dep2"></p></button>
+                    <button type="button" class="list-group-item depBtn"><p id="dep3"></p></button>
+                    <button type="button" class="list-group-item depBtn"><p id="dep4"></p></button>
+                    <button type="button" class="list-group-item depBtn"><p id="dep5"></p></button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <h3>
+                    Arrival
+                </h3>
+                <div>
+                    <select name="arr" id="select-to1" class="contacts" placeholder="Pick arrival airport..."></select>
+                </div>
+                <div class="description">
+                    Select arrival airpot using name, code or GPS
+                </div>
+                <div class="btn-block">
+                    <button onclick="getLocation1()" id="arrLoc" type="button" class="btn btn-default form-control" aria-label="...">
+                        <span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="list-group">
+                    <button type="button" class="list-group-item arrBtn"><p id="arr1">Nearest airports</p></button>
+                    <button type="button" class="list-group-item arrBtn"><p id="arr2"></p></button>
+                    <button type="button" class="list-group-item arrBtn"><p id="arr3"></p></button>
+                    <button type="button" class="list-group-item arrBtn"><p id="arr4"></p></button>
+                    <button type="button" class="list-group-item arrBtn"><p id="arr5"></p></button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="panel">
+            <div>
+                <button id="searchBtn" type="button" class="btn btn-primary btn-lg btn-block" onclick="findFlights()">
+                    Search <span class="glyphicon glyphicon-send"></span>
+                </button>
+            </div>
+        </div>
+        <div id="flightsCont" class="row">
+            <table id="flightsTable" class="table">
+                <thead>
+                  <tr>
+                    <th>Departure Time</th>
+                    <th>Aircraft</th>
+                    <th>Flight Carrier</th>
+                    <th>Flight Number</th>
+                    <th>Terminal</th>
+                </tr>
+            </thead>
+            <tbody id="tableId">
+            </tbody>
+        </table>
+    </div>
+
+    
+    <div class="modal fade" id="probModal" role="dialog">
+        <div class="modal-dialog">
+
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h3 class="modal-title">Results</h3>
+          </div>
+          <div class="modal-body">
+          <p>Based on the latest weather forecast and connecting flight delays, your flight is going to be on time with the probability</p>
+          <div class="progress">
+                <div class="progress progress-striped active">
+                    <div id="probHolder" class="progress-bar" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+  </div>
+
+</div>
+</div>
+
+</div>
+
+
+
+<!--<button type="button" id="get_values">Show values</button>-->
+<!--<button type="button" id="get_values1">Show values</button>-->
+
+
+    <!--
+    <p id="demo">Click the button to get your position.</p>
+
+    <button onclick="getLocation()">Try It</button>
+
+    <div id="mapholder"></div>
+-->
+
+
+</body>
+<script>
+    function getFlightId() {
+        var flightID = $("#flightID").val();
+    };
+</script>
+<script src="Skriptica.js"></script>
+<script src="Sort.js"></script>
+<script src="lokacijaDep.js"></script>
+<script src="Skriptica1.js"></script>
+<script src="airportsDB.js"></script>
+</html>
