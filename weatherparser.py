@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import datetime
 
 import itertools
-import airportcodes as apc
+import airportdata as apc
 
 def read_6405(path):
     names =[
@@ -55,7 +55,7 @@ def read_iem(path):
     if path in iem_cache:
         return iem_cache[path]
     csvpath = Path(path).resolve()
-    pklpath = Path(str(csvpath).replace('raw', 'processed')).with_suffix('.pkl')
+    pklpath = Path(str(csvpath).replace('raw', 'pkl_cache')).with_suffix('.pkl')
     if pklpath.exists():
         return pd.read_pickle(str(pklpath))
 

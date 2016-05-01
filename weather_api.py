@@ -7,7 +7,7 @@ import pandas as pd
 from io import StringIO
 from lxml import etree
 
-import airportcodes
+import airportdata
 
 def special_time_format(t):
     return re.sub(r':([\d][\d])$', r'\1', t)
@@ -24,7 +24,7 @@ def request_weather(location, time):
         "dataSource":"tafs",
         "requestType":"retrieve",
         "format":"xml",
-        "stationString":airportcodes.from_faa(location),
+        "stationString":airportdata.from_faa(location),
         "startTime":special_time_format(start_time.isoformat()),
         "endTime":special_time_format(end_time.isoformat()),
         "mostRecent":'true'

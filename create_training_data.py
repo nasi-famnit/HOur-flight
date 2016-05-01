@@ -1,6 +1,6 @@
 import flightdata
 import weatherparser
-import airportcodes
+import airportdata
 
 import pandas as pd
 from datetime import datetime
@@ -31,8 +31,8 @@ for idx, flight in flights.iterrows():
         if current_csv_name.exists():
             continue
     ff = flight[['Year', 'Month', 'DayofMonth', 'DayOfWeek', 'UniqueCarrier', 'Origin', 'Dest', 'CRSDepTime', 'DepDelayMinutes', 'DepDel15', 'CRSArrTime', 'ArrTime', 'ArrDelay', 'ArrDelayMinutes', 'ArrDel15', 'CRSElapsedTime', 'ActualElapsedTime', 'Distance', 'WeatherDelay']]
-    weather_origin = weatherparser.get_weather_conditions(airportcodes.from_faa(ff.Origin), ff.CRSDepTime)
-    weather_dest = weatherparser.get_weather_conditions(airportcodes.from_faa(ff.Dest), ff.CRSArrTime)
+    weather_origin = weatherparser.get_weather_conditions(airportdata.from_faa(ff.Origin), ff.CRSDepTime)
+    weather_dest = weatherparser.get_weather_conditions(airportdata.from_faa(ff.Dest), ff.CRSArrTime)
     if (weather_origin is None) or ( weather_dest is None):
         continue
     line = pd.DataFrame(pd.concat([ff, weather_origin, weather_dest])).T
