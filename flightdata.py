@@ -1,7 +1,9 @@
-import pandas as pd
-import numpy as np
-
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+import airportdata
 
 
 def read_csv(path):
@@ -50,7 +52,8 @@ def read_csv(path):
 
     df.CRSDepTime = pd.to_datetime(df.FlightDate + ' ' + df.CRSDepTime)
     df.CRSArrTime = pd.to_datetime(df.FlightDate + ' ' + df.CRSArrTime)
-    df.FlightDate = pd.to_datetime(df.FlightDate)
+    df.drop('FlightDate', axis=1, inplace=True)
+
     df.UniqueCarrier = df.UniqueCarrier.astype('category')
     df.Origin = df.Origin.astype('category')
     df.Dest = df.Dest.astype('category')
@@ -58,8 +61,24 @@ def read_csv(path):
 
     df.fillna(
         {"DepDelay": 0, "DepDelayMinutes": 0, "ArrDelay": 0, "ArrDelayMinutes": 0, "WeatherDelay": 0, "NASDelay": 0,
-         "SecurityDelay": 0, "LateAircraftDelay": 0}, inplace=True)
+         "SecurityDelay": 0, "LateAircraftDelay": 0, "CarrierDelay": 0}, inplace=True)
     df.dropna(axis=0, inplace=True)
+
+    origin_airports = df.Origin.unique()
+    destination_airports = df.Dest.unique()
+
+    for airport in origin_airports:
+        where = df.Origin == airport
+        ind = pd.DatetimeIndex(df.CRSDepTime[where]).tz_localize(airportdata.by_iata[airport]['TZTimezone'],
+                                                                 ambiguous='NaT').tz_convert('UTC')
+        df.loc[where, 'CRSDepTime'] = ind
+    for airport in destination_airports:
+        where = df.Dest == airport
+        ind = pd.DatetimeIndex(df.CRSArrTime[where]).tz_localize(airportdata.by_iata[airport]['TZTimezone'],
+                                                                 ambiguous='NaT').tz_convert('UTC')
+        df.loc[where, 'CRSArrTime'] = ind
+
+    df.dropna(axis=0, inplace=True) #maybe some NaT's have appeared
 
     parent_folder = pklpath.parent
     if not parent_folder.exists():
@@ -70,4 +89,5 @@ def read_csv(path):
 
 
 if __name__ == '__main__':
-    df = read_csv(r'C:\Dev\Projects\flight-ready\data\processed\flights\On_Time_On_Time_Performance_2016_1.csv')
+    df = read_csv('data/unpacked/flights/On_Time_On_Time_Performance_2016_1.csv')
+    df.info()

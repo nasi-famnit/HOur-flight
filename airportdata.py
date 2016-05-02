@@ -22,7 +22,7 @@ def init_misc(airports_df):
 
 def init(airports_dat_path):
     columns = ["AirportID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", "Altitude", "Timezone",
-               "DST", "TZTimzone"]
+               "DST", "TZTimezone"]
     dtypes = {
         "AirportID": np.uint32,
         "Latitude": np.float64,
