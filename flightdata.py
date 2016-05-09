@@ -70,15 +70,15 @@ def read_csv(path):
     for airport in origin_airports:
         where = df.Origin == airport
         ind = pd.DatetimeIndex(df.CRSDepTime[where]).tz_localize(airportdata.by_iata[airport]['TZTimezone'],
-                                                                 ambiguous='NaT').tz_convert('UTC')
+                                                                 ambiguous='NaT', errors='coerce').tz_convert('UTC')
         df.loc[where, 'CRSDepTime'] = ind
     for airport in destination_airports:
         where = df.Dest == airport
         ind = pd.DatetimeIndex(df.CRSArrTime[where]).tz_localize(airportdata.by_iata[airport]['TZTimezone'],
-                                                                 ambiguous='NaT').tz_convert('UTC')
+                                                                 ambiguous='NaT', errors='coerce').tz_convert('UTC')
         df.loc[where, 'CRSArrTime'] = ind
 
-    df.dropna(axis=0, inplace=True) #maybe some NaT's have appeared
+    df.dropna(axis=0, inplace=True)  # maybe some NaT's have appeared
 
     parent_folder = pklpath.parent
     if not parent_folder.exists():
