@@ -1,17 +1,16 @@
 import os
 import re
-
-import pandas as pd
-import numpy as np
-
 from datetime import date, timedelta
-from urllib import request
 from pathlib import Path
-from urlpath import URL
+from urllib import request
 from zipfile import ZipFile
 
-import flightdata
+import pandas as pd
+import requests
+from urlpath import URL
+
 import airportdata
+import flightdata
 
 
 def iter_days(start_date: date, end_date: date):
@@ -33,10 +32,13 @@ def iter_months(start_date: date, end_date: date):
         cur += delta
 
 
-def download(url, destination_directory):
+def download(url, destination_directory, filename=None):
     dpath = Path(destination_directory)
     url = URL(url)
-    fname = url.name
+    if filename is not None:
+        fname = filename
+    else:
+        fname = url.name
     fpath = dpath / fname
 
     dpath.mkdir(parents=True, exist_ok=True)
@@ -45,13 +47,13 @@ def download(url, destination_directory):
         print(fname, "already downloaded")
         return fpath
 
-    print("Downloading", url.name, 'to', dpath)
+    print("Downloading", fname, 'to', dpath)
     try:
         request.urlretrieve(str(url), str(fpath.absolute()))
         print("...done.")
         return fpath
-    except:
-        print('Error occured while downloading', url.name)
+    except Exception as exception:
+        print('Error occured while downloading', fname, ":", exception)
         return None
 
 
@@ -96,6 +98,11 @@ def merge_flights(frames):
 # can be programmatically downloaded from here:
 # http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236&DB_Short_Name=On-Time
 def download_flights(start_date, end_date):
+    pkl_path = 'data/processed/flights/flights{0}.{1}-{2}.{3}.pkl'.format(start_date.year, start_date.month,
+                                                                          end_date.year,
+                                                                          end_date.month)
+    if Path(pkl_path).exists():
+        return pd.read_pickle(pkl_path)
     files, failed = download_range(r'http://tsdata.bts.gov/PREZIP/On_Time_On_Time_Performance_%Y_%-m.zip',
                                    'data/raw/flights', start_date, end_date)
     dest_path = Path('data/unpacked/flights')
@@ -117,31 +124,40 @@ def download_flights(start_date, end_date):
         frames.append(df)
 
     all_flights = merge_flights(frames)
-    all_flights.to_pickle(
-        'data/processed/flights/flights{0}.{1}-{2}.{3}.pkl'.format(start_date.year, start_date.month, end_date.year,
-                                                                   end_date.month))
+    all_flights.to_pickle(pkl_path)
     return all_flights
 
 
 def download_weather_airport(airport, start_date, end_date):
-    icao_id = airportdata.from_faa(airport)
-    urls = [
-        (r'ftp://ftp.ncdc.noaa.gov/pub/data/asos-onemin/6405-%Y/64050{}%Y%m.dat', 'asos-onemin'),
-        (r'ftp://ftp.ncdc.noaa.gov/pub/data/asos-onemin/6406-%Y/64060{}%Y%m.dat', 'asos-onemin'),
-        (r'ftp://ftp.ncdc.noaa.gov/pub/data/asos-fivemin/6401-%Y/64010{}%Y%m.dat', 'asos-fivemin'),
-    ]
-    weather_path = Path('data/raw/weather')
-    for url, folder in urls:
-        download_range(url.format(icao_id), weather_path / folder, start_date, end_date)
+    url = "http://mesonet.agron.iastate.edu/cgi-bin/request/asos.py"
+    params = {"tz": "Etc/UTC",
+              "format": "comma",
+              "year1": str(start_date.year), "month1": str(start_date.month), "day1": str(start_date.day),
+              "year2": str(end_date.year), "month2": str(end_date.month), "day2": str(end_date.day),
+              "station": airport,
+              "latlon": "yes",
+              "data": ["tmpf", "dwpf", "relh", "drct", "sknt", "p01i", "mslp", "vsby", "gust", "skyc1", "skyl1"]
+              }
+    filename = '{}_{}.{}-{}.{}.csv'.format(airport, start_date.year, start_date.month,
+                                           end_date.year,
+                                           end_date.month)
+    r = requests.Request(method='GET', url=url, params=params).prepare()
+    download(r.url, 'data/raw/weather/iem', filename=filename)
 
 
 def download_weather(airports, start_date, end_date):
+    n_airports = len(airports)
+    print("Will download weather data for", n_airports, "airports")
+    i = 1
     for airport in airports:
+        print(i, ": ", end='')
+        i += 1
         download_weather_airport(airport, start_date, end_date)
 
 
 def download_airport_data():
-    url = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    url = "https://cdn.rawgit.com/dancsi/5badd4887a43b998ea3b549b3a0e4e81" \
+          "/raw/e6e761816c84193fca58218b62aba713b36d9dae/airports.dat"
     fpath = download(url, 'data/raw/')
     airportdata.init(fpath)
 
@@ -152,6 +168,6 @@ end_date = date(2015, 12, 31)
 download_airport_data()
 
 flights = download_flights(start_date, end_date)
-flights.info()
+airports = set(flights['Origin']) | set(flights['Dest'])
 
-# download_weather(airports, start_date, end_date)
+download_weather(airports, start_date, end_date)
