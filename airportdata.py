@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 from pathlib import Path
+import pickle
 
 db_pkl_path = "data/processed/airports.pkl"
 db_dat_path = "data/raw/airports.dat"
@@ -14,11 +15,27 @@ by_iata = None
 
 def init_misc(airports_df):
     global icao2faa, faa2icao, by_icao, by_iata
-    icao2faa = {r.ICAO: r.IATA for i, r in airports_df.iterrows()}
-    faa2icao = {r.IATA: r.ICAO for i, r in airports_df.iterrows()}
-    by_icao = {r.ICAO: r for i, r in airports_df.iterrows()}
-    by_iata = {r.IATA: r for i, r in airports_df.iterrows()}
-
+    pkl_path = 'data/pkl_cache/airports_aux.pkl'
+    if Path(pkl_path).exists():
+        with open(pkl_path, 'rb') as fin:
+            d = pickle.load(fin)
+        icao2faa = d['icao2faa']
+        faa2icao = d['faa2icao']
+        by_icao = d['by_icao']
+        by_iata = d['by_iata']
+    else:
+        icao2faa = {r.ICAO: r.IATA for i, r in airports_df.iterrows()}
+        faa2icao = {r.IATA: r.ICAO for i, r in airports_df.iterrows()}
+        by_icao = {r.ICAO: r.to_dict() for i, r in airports_df.iterrows()}
+        by_iata = {r.IATA: r.to_dict() for i, r in airports_df.iterrows()}
+        d = {
+            'icao2faa': icao2faa,
+            'faa2icao': faa2icao,
+            'by_icao': by_icao,
+            'by_iata': by_iata
+        }
+        with open(pkl_path, 'wb') as fout:
+            pickle.dump(d, fout)
 
 def init(airports_dat_path):
     columns = ["AirportID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude", "Altitude", "Timezone",
