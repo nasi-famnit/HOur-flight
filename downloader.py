@@ -11,6 +11,7 @@ from urlpath import URL
 
 import airportdata
 import flightdata
+import weatherparser
 
 
 def iter_days(start_date: date, end_date: date):
@@ -82,7 +83,7 @@ def download_range(url, destination_directory, start_date, end_date):
     return downloaded, failed
 
 
-def merge_flights(frames):
+def merge_frames(frames, ignore_index=False) -> pd.DataFrame:
     first_frame = frames[0]
     categorical_columns = (col for col in first_frame.columns if pd.core.common.is_categorical_dtype(first_frame[col]))
     for col in categorical_columns:
@@ -92,7 +93,7 @@ def merge_flights(frames):
 
         for frame in frames:
             frame[col].cat.set_categories(categories, inplace=True)
-    return pd.concat(frames, copy=False, ignore_index=True)
+    return pd.concat(frames, copy=False, ignore_index=ignore_index)
 
 
 # can be programmatically downloaded from here:
@@ -123,7 +124,7 @@ def download_flights(start_date, end_date):
         df = flightdata.read_csv(str(csv_file))
         frames.append(df)
 
-    all_flights = merge_flights(frames)
+    all_flights = merge_frames(frames, ignore_index=True)
     all_flights.to_pickle(pkl_path)
     return all_flights
 
@@ -142,17 +143,35 @@ def download_weather_airport(airport, start_date, end_date):
                                            end_date.year,
                                            end_date.month)
     r = requests.Request(method='GET', url=url, params=params).prepare()
-    download(r.url, 'data/raw/weather/iem', filename=filename)
+    fpath = download(r.url, 'data/raw/weather/iem', filename=filename)
+    return fpath
 
 
 def download_weather(airports, start_date, end_date):
+    pkl_path = 'data/processed/weather/weather{0}.{1}-{2}.{3}.pkl'.format(start_date.year, start_date.month,
+                                                                          end_date.year,
+                                                                          end_date.month)
+
+    if Path(pkl_path).exists():
+        return pd.read_pickle(pkl_path)
+
     n_airports = len(airports)
+    frames = []
     print("Will download weather data for", n_airports, "airports")
-    i = 1
-    for airport in airports:
+    for i, airport in enumerate(airports):
         print(i, ": ", end='')
-        i += 1
-        download_weather_airport(airport, start_date, end_date)
+        fname = download_weather_airport(airport, start_date, end_date)
+        if fname is None:
+            continue
+        df = weatherparser.read_iem(fname)
+        if df is None:
+            continue
+        frames.append(df)
+    df = merge_frames(frames)
+    df.set_index('station', inplace=True, append=True)
+    df = df.reorder_levels(['station', 'valid'])
+    df.sortlevel(inplace=True)
+    df.to_pickle(pkl_path)
 
 
 def download_airport_data():
@@ -168,6 +187,6 @@ end_date = date(2015, 12, 31)
 download_airport_data()
 
 flights = download_flights(start_date, end_date)
-airports = set(flights['Origin']) | set(flights['Dest'])
+airports = sorted(list(set(flights['Origin']) | set(flights['Dest'])))
 
 download_weather(airports, start_date, end_date)
